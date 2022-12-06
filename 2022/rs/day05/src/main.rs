@@ -5,9 +5,10 @@ use std::str::FromStr;
 
 fn main() {
     let top_crates = part1_get_top_crates();
+    let top_crates_with_stacks = part2_get_top_crates_with_stacks();
     println!(
         "top crates: {}, overlappint pairs: {}",
-        top_crates, "[T][D][C][H][V][H][J][T][G]"
+        top_crates, top_crates_with_stacks
     );
 }
 
@@ -117,6 +118,30 @@ fn part1_get_top_crates() -> String {
         }
     }
 
+    let mut top_crates = String::new();
+    for i in 0..input.stacks.len() {
+        let c = input.stacks[i][input.stacks[i].len() - 1];
+        top_crates.push(c);
+    }
+    return top_crates.to_string();
+}
+
+fn part2_get_top_crates_with_stacks() -> String {
+    let mut input = parse_input();
+
+    for instruction in input.instructions {
+        let mut move_statck = Vec::new();
+        for _ in 0..instruction.quantity {
+            let c = input.stacks[instruction.from - 1].pop().unwrap();
+            move_statck.push(c);
+        }
+
+        move_statck.reverse();
+        for c in move_statck {
+            input.stacks[instruction.to - 1].push(c);
+        }
+    }
+    
     let mut top_crates = String::new();
     for i in 0..input.stacks.len() {
         let c = input.stacks[i][input.stacks[i].len() - 1];
