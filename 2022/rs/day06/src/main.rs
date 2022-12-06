@@ -1,9 +1,10 @@
 use std::collections::VecDeque;
+use itertools::Itertools;
 
 fn main() {
-    let first_start_of_packet_marker = part1_get_first_start_of_packet_marker();
-    // let overlapping_count = part2_overlapping_pairs_count();
-    println!("first start-of-packet marker: {}, overlappint pairs: {}", first_start_of_packet_marker, first_start_of_packet_marker);
+    let start_of_packet_marker = part1_get_start_of_packet_marker();
+    let start_of_message_marker = part2_get_start_of_message_marker();
+    println!("first start-of-packet marker: {}, first start-of-message marker: {}", start_of_packet_marker, start_of_message_marker);
 }
 
 fn get_input() -> Vec<char> {
@@ -11,39 +12,30 @@ fn get_input() -> Vec<char> {
     content.chars().collect()
 }
 
-fn part1_get_first_start_of_packet_marker() -> u32 {
+fn find_marker(len: usize) -> usize {
     let chars = get_input();
 
-    let mut vals = VecDeque::new();
-    let mut index = 0;
-    for char in chars {
-        vals.push_back(char);
-        index += 1;
-        
-        if index < 4 {
-            continue;
-        }
-        
-        let mut has_duplicate = false;
-        for i in 0..3 {
-            for j in (i+1)..4 {
-                if vals[i] == vals[j] {
-                    has_duplicate = true;
-                    break;
-                }
-            }
-            if has_duplicate {
-                break;
-            }
-        }
-        
-        if !has_duplicate {
-            break;
-        }
-        
-        if has_duplicate {
-            vals.pop_front();
-        }
+    let mut seen = VecDeque::new();
+    for i in 0..len {
+        seen.push_back(chars[i as usize]);
     }
-    index
+
+    for i in (len+1)..chars.len() {
+        if seen.clone().into_iter().unique().count() == len {
+            return i;
+        }
+
+        seen.pop_front();
+        seen.push_back(chars[i as usize]);
+    }
+
+    return 0;
+}
+
+fn part1_get_start_of_packet_marker() -> usize {
+    find_marker(4)
+}
+
+fn part2_get_start_of_message_marker() -> usize {
+    find_marker(14)
 }
