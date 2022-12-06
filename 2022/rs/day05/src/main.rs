@@ -7,7 +7,7 @@ fn main() {
     let top_crates = part1_get_top_crates();
     println!(
         "top crates: {}, overlappint pairs: {}",
-        top_crates, top_crates
+        top_crates, "[T][D][C][H][V][H][J][T][G]"
     );
 }
 
@@ -42,19 +42,8 @@ impl FromStr for Instruction {
     }
 }
 
-fn pad_string(s: &str) -> String {
-    if s.starts_with("    ") {
-        let s = s.replacen("    ", "xxx ", 1);
-        let s = s.replace("    ", " xxx");
-        return s.to_string();
-    }
-
-    let s = s.replace("    ", " xxx");
-    return s.to_string();
-}
-
 struct Input {
-    stacks: Vec<Vec<String>>,
+    stacks: Vec<Vec<char>>,
     instructions: Vec<Instruction>,
 }
 
@@ -62,42 +51,54 @@ fn parse_input() -> Input {
     let file = File::open("../../inputs/day05.txt").expect("unable to open input file");
     let reader = BufReader::new(file);
 
-    let pad = "xxx";
-    let mut stacks: Vec<Vec<String>> = Vec::new();
-    let mut instructions: Vec<Instruction> = Vec::new();
+    let mut stack_lines: Vec<String> = Vec::new();
+    let mut move_lines: Vec<String> = Vec::new();
 
-    let mut parse_instructions = false;
+    let mut is_stack_line = true;
     for line in reader.lines() {
         let line = line.unwrap();
         if line.is_empty() || line.starts_with(" 1") {
-            parse_instructions = true;
+            is_stack_line = false;
             continue;
         }
 
-        if !parse_instructions {
-            let line = pad_string(line.as_str());
-            let crates: Vec<&str> = line.split_whitespace().collect();
-            if stacks.len() == 0 {
-                for _ in 0..crates.len() {
-                    stacks.push(Vec::new());
-                }
-            }
-
-            let mut i = 0;
-            for c in crates {
-                if c.ne(pad) {
-                    stacks[i].push(c.to_string());
-                }
-                i += 1;
-            }
+        if is_stack_line {
+            stack_lines.push(line);
         } else {
-            let instruction = line.parse::<Instruction>().unwrap();
-            instructions.push(instruction);
+            move_lines.push(line);
         }
     }
 
+    let mut stacks: Vec<Vec<char>> = Vec::new();
+    for line in stack_lines {
+        // Add one space to the end of the line
+        let line = format!("{} ", line);
+        let chunks = line.as_bytes().chunks(4);
+        if stacks.len() == 0 {
+            for _ in 0..chunks.len() {
+                stacks.push(Vec::new());
+            }
+        }
+        let mut stack_index = 0;
+        // Read 4 chars at a time
+        for chunk in chunks {
+            let c = chunk[1] as char;
+            if c != ' ' {
+                stacks[stack_index].push(c);
+            }
+            stack_index += 1;
+        }
+    }
+
+    // Reverse stacks
     for s in stacks.iter_mut() {
         s.reverse();
+    }
+
+    let mut instructions: Vec<Instruction> = Vec::new();
+    for line in move_lines {
+        let instruction = line.parse::<Instruction>().unwrap();
+        instructions.push(instruction);
     }
 
     return Input {
@@ -111,15 +112,15 @@ fn part1_get_top_crates() -> String {
 
     for instruction in input.instructions {
         for _ in 0..instruction.quantity {
-            let c = input.stacks[instruction.from - 1].pop();
-            input.stacks[instruction.to - 1].push(c.unwrap().to_string());
+            let c = input.stacks[instruction.from - 1].pop().unwrap();
+            input.stacks[instruction.to - 1].push(c);
         }
     }
 
-    let mut top_crates: String = "".to_owned();
+    let mut top_crates = String::new();
     for i in 0..input.stacks.len() {
-        let s = input.stacks[i][input.stacks[i].len() -1].to_owned();
-        top_crates.push_str(&s);
+        let c = input.stacks[i][input.stacks[i].len() - 1];
+        top_crates.push(c);
     }
     return top_crates.to_string();
 }
